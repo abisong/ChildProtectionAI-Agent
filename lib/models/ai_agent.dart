@@ -9,13 +9,13 @@ class AIAgent {
   final IconData icon;
   final Color color;
 
-  AIAgent({
+  const AIAgent({
     required this.title,
     required this.useCase,
     required this.example,
     required this.application,
     required this.buildInteractiveDemo,
-    this.icon = Icons.security,
-    this.color = Colors.blue,
+    required this.icon,
+    required this.color,
   });
 }

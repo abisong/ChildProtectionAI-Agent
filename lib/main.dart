@@ -30,12 +30,37 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Child Protection AI Agents',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.blue,
+          brightness: Brightness.light,
+        ),
         cardTheme: CardTheme(
-          elevation: 4,
-          margin: const EdgeInsets.all(8),
+          elevation: 0,
+          margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        appBarTheme: const AppBarTheme(
+          centerTitle: true,
+          elevation: 0,
+        ),
+        textTheme: const TextTheme(
+          titleLarge: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            letterSpacing: -0.5,
+          ),
+          titleMedium: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.3,
+          ),
+          bodyMedium: TextStyle(
+            fontSize: 16,
+            letterSpacing: 0.1,
+            height: 1.5,
           ),
         ),
       ),
@@ -201,38 +226,72 @@ class AgentsGridView extends StatelessWidget {
           icon: Icons.attach_money,
           color: Colors.green.shade700,
         ),
-        // More agents will be added here...
       ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Child Protection AI Agents'),
-        backgroundColor: Colors.blue,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.shield,
+              color: Theme.of(context).colorScheme.primary,
+              size: 32,
+            ),
+            const SizedBox(width: 12),
+            const Text(
+              'Child Protection AI',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 28,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Theme.of(context).colorScheme.surface,
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          int crossAxisCount = 3;
-          if (constraints.maxWidth < 900) {
+          int crossAxisCount = 1;
+          if (constraints.maxWidth > 1400) {
+            crossAxisCount = 4;
+          } else if (constraints.maxWidth > 1000) {
+            crossAxisCount = 3;
+          } else if (constraints.maxWidth > 600) {
             crossAxisCount = 2;
           }
-          if (constraints.maxWidth < 600) {
-            crossAxisCount = 1;
-          }
 
-          return GridView.builder(
-            padding: const EdgeInsets.all(16),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
-              childAspectRatio: 1.2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Theme.of(context).colorScheme.surface,
+                  Theme.of(context).colorScheme.surface.withOpacity(0.8),
+                ],
+              ),
             ),
-            itemCount: agents.length,
-            itemBuilder: (context, index) {
-              return AgentCard(agent: agents[index]);
-            },
+            child: GridView.builder(
+              padding: EdgeInsets.symmetric(
+                horizontal: constraints.maxWidth > 1400 ? 120 : 
+                           constraints.maxWidth > 1000 ? 80 : 
+                           constraints.maxWidth > 600 ? 40 : 16,
+                vertical: 24,
+              ),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: 1.1,
+                crossAxisSpacing: 24,
+                mainAxisSpacing: 24,
+              ),
+              itemCount: agents.length,
+              itemBuilder: (context, index) {
+                return AgentCard(agent: agents[index]);
+              },
+            ),
           );
         },
       ),
@@ -248,12 +307,14 @@ class AgentCard extends StatelessWidget {
   void _openDemo(BuildContext context) {
     showDialog(
       context: context,
-      barrierDismissible: false,
       builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
         child: Container(
-          width: MediaQuery.of(context).size.width * 0.8,
+          width: MediaQuery.of(context).size.width * 0.7,
           height: MediaQuery.of(context).size.height * 0.8,
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(24),
           child: Column(
             children: [
               Row(
@@ -261,11 +322,18 @@ class AgentCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(agent.icon, color: agent.color),
-                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: agent.color.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(agent.icon, color: agent.color, size: 28),
+                      ),
+                      const SizedBox(width: 16),
                       Text(
                         agent.title,
-                        style: Theme.of(context).textTheme.headlineSmall,
+                        style: Theme.of(context).textTheme.titleLarge,
                       ),
                     ],
                   ),
@@ -275,7 +343,7 @@ class AgentCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const Divider(),
+              const Divider(height: 32),
               Expanded(
                 child: agent.buildInteractiveDemo(context),
               ),
@@ -288,60 +356,107 @@ class AgentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        onTap: () => _openDemo(context),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    agent.icon,
-                    color: agent.color,
-                    size: 32,
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        child: Hero(
+          tag: agent.title,
+          child: Card(
+            elevation: 0,
+            child: InkWell(
+              onTap: () => _openDemo(context),
+              borderRadius: BorderRadius.circular(16),
+              hoverColor: agent.color.withOpacity(0.05),
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: Colors.grey.withOpacity(0.2),
+                    width: 1,
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      agent.title,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: agent.color,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: agent.color.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
                           ),
+                          child: Icon(
+                            agent.icon,
+                            color: agent.color,
+                            size: 32,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                agent.title,
+                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                      color: agent.color,
+                                      fontSize: 20,
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Tooltip(
+                                message: agent.useCase,
+                                child: Text(
+                                  agent.useCase,
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                        color: Colors.grey[700],
+                                      ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildSection(context, 'Use Case:', agent.useCase),
-                      const SizedBox(height: 8),
-                      _buildSection(context, 'Example:', agent.example),
-                      const SizedBox(height: 8),
-                      _buildSection(context, 'Application:', agent.application),
-                      const SizedBox(height: 16),
-                      Center(
-                        child: ElevatedButton.icon(
-                          onPressed: () => _openDemo(context),
-                          icon: const Icon(Icons.play_arrow),
-                          label: const Text('Try Demo'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: agent.color,
+                    const SizedBox(height: 20),
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSection(context, 'Example', agent.example),
+                            const SizedBox(height: 12),
+                            _buildSection(context, 'Application', agent.application),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    MouseRegion(
+                      cursor: SystemMouseCursors.click,
+                      child: FilledButton.icon(
+                        onPressed: () => _openDemo(context),
+                        icon: const Icon(Icons.play_arrow),
+                        label: const Text('Try Demo'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: agent.color,
+                          minimumSize: const Size(double.infinity, 48),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ),
@@ -354,14 +469,20 @@ class AgentCard extends StatelessWidget {
       children: [
         Text(
           title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
-        const SizedBox(height: 4),
-        Text(
-          content,
-          style: Theme.of(context).textTheme.bodyMedium,
+        const SizedBox(height: 8),
+        Tooltip(
+          message: content,
+          child: Text(
+            content,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Colors.grey[700],
+                  height: 1.5,
+                ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 3,
+          ),
         ),
       ],
     );
